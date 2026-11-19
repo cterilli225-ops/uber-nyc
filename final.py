@@ -53,7 +53,16 @@ def get_data():
     Inputs: none
     Outputs: APR (dataframe)
     """
+    #[FILE_IO]
+    # reads the april csv file and puts into a data frame named APR
+    # add columns for name and color to the dataframe
+
     APR = pd.read_csv(DATA_FOLDER + APR_CSV)
+
+    #[STR_CLEAN]
+    # clean the date/time column to the pd.date_time format
+    # tells pd where each part of the date sits in text
+    # example: 4/1/2014 0:11:00 becomes 2014-04-01 00:11:00
     APR['Date/Time'] = pd.to_datetime(APR['Date/Time'], format='%m/%d/%Y %H:%M:%S')
     APR['name'] = APR['Base'].map(lambda b: BASES[b]['name'])
     APR['color'] = APR['Base'].map(lambda b: BASES[b]['color'])
