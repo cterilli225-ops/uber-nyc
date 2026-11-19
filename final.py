@@ -2,9 +2,18 @@
 Colin Terilli
 Section 7
 
+https://uber-nyc-april.streamlit.app/ 
+[DEPLOY]
+Handled files by creating a folder for data which I pathed in the final program 
+with a constant. Dependency is solved through the requirements.txt file which 
+was uploaded to github and contains the required libraries needed to run the
+program. Deployment issues were with the requirements.txt file as the file
+did not run originally without them. 
 
-This program will display a streamlit website that show statictics and analysis from
-the April 2014 dataset. displays include statitics, graphs, and maps. 
+uber-tlc-foil-response 
+
+This program will display a streamlit website that shows statitics and analysis from
+the April 2014 dataset. Displays include statitics, graphs, and maps. 
 
 Used with Claude Opus 5.5
 """
@@ -21,10 +30,10 @@ DATA_FOLDER = "Data/"
 APR_CSV = "uber-raw-data-apr14.csv"
 
 #[DICT_DRIVEN]
-# dicition which keys are the base cod and the values is another diction 
+# dictionary which keys are the base code and the values is another dictionary 
 # which keys are color and name
-# Example: 'B02512' maps to diction which give color '[230,159, 0]' (orange)
-# and name 'Unter
+# Example: 'B02512' maps to dictionary which give color '[230,159, 0]' (orange)
+# and name 'Unter'
 BASES = {
     'B02512':{'color': [230, 159, 0], 'name': 'Unter'},    # orange
     'B02598': {'color': [0, 114, 178], 'name': 'Hinter'},    # blue
@@ -39,7 +48,7 @@ BASES = {
 @st.cache_data
 def get_data():
     """
-    Function will read CSV file and turn into datframe, rewrite the Date/Time columns
+    Function will read CSV file and turn into dataframe, rewrite the Date/Time columns
     and add a base name and color column. 
     Inputs: none
     Outputs: APR (dataframe)
@@ -55,22 +64,22 @@ def get_bases(df, d=None, key=None):
     """
     Gets user's selected bases through streamlit multiselect function
     Input: dataframe (APR), default setting ("all" or none), key (default = none)
-    Output: Dataframe with select bases and the select_bases list
+    Output: Dataframe with selected bases and the select_bases list
     """
     #[AI_REWRITE]
-    # Fucntion was orginally in main and only multiselect.
+    # Function was originally in main and only multiselect.
     # I rewrote it as its own function and added the default setting to it
-    # I then added the if statment to check for the "d" setting (all or none)
-    # then I had it return the df with slected bases and the selected bases list
+    # I then added the if statement to check for the "d" setting (all or none)
+    # then I had it return the df with selected bases and the selected bases list
     # later AI suggested I add the key part to it, which I did 
 
     #[REUSE_FUNC]
-    # gets list of bases that the user wants for certain display (Scattter map, heatmap, graph)
-    # Example get_bases(APR, d="all") will dispay a multiselect on streamlit
+    # gets list of bases that the user wants for certain display (Scatter map, heatmap, graph)
+    # Example get_bases(APR, d="all") will display a multiselect on streamlit
     # that defaults to all already selected. The user can select bases to show/not show
 
     #[LIST_COMP]
-    # Creates a list of base names by looping through the BASES dicitionary for base names
+    # Creates a list of base names by looping through the BASES dictionary for base names
     # Example B02512':{'color': [230, 159, 0], 'name': 'Unter'} becomes 'Unter'
     base_options = [BASES[base]['name'] for base in BASES]
     if d == "all":
@@ -91,10 +100,10 @@ def hour_label(h):
 @st.cache_data
 def get_info():
     """
-    Gets multuple statisics and df.
+    Gets multiple statisics and df.
     Input: none
     Output: dictionary of (total, base, base_count, base_share, day, day_count, weekday, 
-    weekday_avg, busy_hour, busy_hour_count, queit_hour, quiet_hour_count, by_hour, by_weekday
+    weekday_avg, busy_hour, busy_hour_count, quiet_hour, quiet_hour_count, by_hour, by_weekday
     """
     df = get_data()
 
@@ -104,7 +113,7 @@ def get_info():
 
 
     # creates a pd series where dates are values
-    # then coverts the series to pandas date time values
+    # then converts the series to pandas date time values
     # then uses dt.day_name to turn dates into day names 
     weekdays = pd.to_datetime(pd.Series(day_counts.index)).dt.day_name().values 
     weekday_avg = day_counts.groupby(weekdays).mean()
@@ -128,10 +137,11 @@ def get_info():
 
 def time_bar_chart(f):
     """
-    Creates 2 bar charts displayed by radio by user. 1.) bar chart for total pickups by hour,
+    Creates 2 bar charts displayed one at time selected by radio by user. 
+    1.) bar chart for total pickups by hour,
     2.) bar chart for average pickups by day of week.
     Inputs: dictionary (must contain keys 'by_hour' 'by_weekday')
-    Outputs: 2 bar charts for most common hours nad most common day (name)
+    Outputs: 2 bar charts for most common hours and most common day (name)
     """
     choice = st.radio("Show pickups by", ["Hour of day", "Day of week"], horizontal=True, key="bar")
 
@@ -192,11 +202,11 @@ def overview():
     time_bar_chart(info)
 
 #------------------------------------------------
-def line_chart(df):
+def line_chart(df, names):
     """
     Displays line chart of bases. Y axis is pickups and x axis in date/time.
     Users can select how it is displayed (hour, day, or week)
-    Inputs: APR dataframe
+    Inputs: APR dataframe, names list
     Outputs: line chart 
     """
     if df.empty:
@@ -218,10 +228,10 @@ def line_chart(df):
     end = pd.Timestamp(dates[1]) + pd.Timedelta(days=1)
     df = df[(df['Date/Time'] >= start) & (df['Date/Time'] < end)]
 
-    # count puckups per time
+    # count pickups per time
     counts = df.groupby([pd.Grouper(key='Date/Time', freq=group_options[group_by]), 'name']).size().unstack(fill_value=0)
 
-    # Matlpot lib takes colors 1 - 0
+    # Matplotlib takes colors 1 - 0
     colors = {b['name']: [c / 255 for c in b['color']] for b in BASES.values()}
 
     fig, ax = plt.subplots()
@@ -234,11 +244,15 @@ def line_chart(df):
     fig.autofmt_xdate()  # tilt the dates so they don't overlap
     st.pyplot(fig)
 
+    missing = [n for n in names if n not in df['name'].values]
+    if missing:
+        st.write("No pickups in this time frame for: " + ", ".join(missing))
+
 #---------------------------------------
 
 def scatterplotlay(df, view):
     """
-    Displays a scatter plot over newyork city based on user choice of base(s)
+    Displays a scatter plot over New York City based on user choice of base(s)
     Inputs: User choice dataframe
     Outputs: Map of pickups colored by base
     """
@@ -255,10 +269,10 @@ def scatterplotlay(df, view):
 
 def base_table(df, names):
     """
-    Displays a table of bases selcted by user. Column 1 is base name, 
+    Displays a table of bases selected by user. Column 1 is base name, 
     column 2 is color, column 3 total number of pickups
     Input: user selected dataframe, base names
-    Output: n (number of valid select bases) x 3 table
+    Output: n (number of valid selected bases) x 3 table
     """
     if df.empty:
         st.write("None of the selected bases have pickups in this time frame.")
@@ -277,9 +291,9 @@ def base_table(df, names):
 #------------------------------------------------------------------------------------------------------------------
 def heatmap(df, view, names):
     """
-    Displays a heatmap based on user select bases 
+    Displays a heatmap based on user selected bases. User can select certain date, time, or all times. 
     Inputs: user selected dataframe, view setting, names list
-    Outputs: heat map of new york based on pickups (red to white/yellow) 
+    Outputs: heat map of New York based on pickups (red to white/yellow) 
     """
     if df.empty:
         st.write("None of the selected bases have pickups in this time frame.")
@@ -287,7 +301,7 @@ def heatmap(df, view, names):
 
     dates = sorted(df['Date/Time'].dt.date.unique())
     day = st.select_slider("Date", ["All month"] + dates)
-    hour = st.select_slider("Hour of day", ["All day"] + list(range(24)), value=17)
+    hour = st.select_slider("Hour of day", ["All day"] + list(range(24)))
 
     if day != "All month":
         df = df[df['Date/Time'].dt.date == day]
@@ -315,6 +329,7 @@ def main():
     st.caption("April 2014 · Source: FiveThirtyEight, from NYC Taxi & Limousine Commission records")
     st.write("Uber's NYC drivers were licensed through several 'bases'. "
              "This app looks at which bases were busiest, and when and where people got picked up.")
+    st.write("Bases are licensing entities, not separate service areas")
 
     APR = get_data()
 
@@ -329,7 +344,7 @@ def main():
         st.subheader("Which base has the most pickups each day?")
         st.caption("Pick bases, how to group the time, and a date range.")
         selected, names = get_bases(APR, "all", key="graph")
-        line_chart(selected)
+        line_chart(selected, names)
 
     if mode == "Pickups by base":
         st.subheader("Where are the pickup locations for a base?")
@@ -340,7 +355,7 @@ def main():
 
     if mode == "Heatmap":
         st.subheader("Which areas of the city are busiest?")
-        st.caption("Red areas had more pickups. Colors rescale as you zoom.")
+        st.caption("Red areas had more pickups. Colors rescale as you zoom. Slide to select specific date or hour")
         selected, names = get_bases(APR, "all", key="heat")
         heatmap(selected, view, names)
 
